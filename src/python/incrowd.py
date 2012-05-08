@@ -4,9 +4,9 @@ import operator
 import matplotlib.pyplot as plt
 
 try:
-    from spams import lasso as Lasso
+    from spams import lasso
 except:
-    from spams import Lasso
+    from spams import Lasso as lasso
 
 try:
     from cvxopt import matrix as cvxopt_matrix, solvers as cvxopt_solvers
@@ -36,7 +36,7 @@ class SPAMSLassoSolver(object):
         fA = np.asfortranarray(A)
         #print 'fy.shape=',fy.shape
         #print 'fA.shape=',fA.shape
-        xnew = Lasso(fy, fA, mode=2, lambda1=self.lambda1, lambda2=self.lambda2)
+        xnew = lasso(fy, fA, mode=2, lambda1=self.lambda1, lambda2=self.lambda2)
         xnew = np.array(xnew.todense()).reshape(x0.shape)
 
         #print 'dense_solver: xnew.shape=',xnew.shape
