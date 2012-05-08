@@ -4,7 +4,7 @@ import operator
 import matplotlib.pyplot as plt
 
 try:
-    from spams import lasso
+    from spams import lasso as Lasso
 except:
     from spams import Lasso
 
