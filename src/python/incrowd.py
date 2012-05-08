@@ -304,7 +304,7 @@ class ConvolutionalInCrowdModel(InCrowdModel):
 
     def get_filter(self, x):
         """ Returns a reshaped filter based on the given vector of parameter values """
-        return x[::-1].reshape(self.ndelays, self.num_channels).transpose()
+        return np.flipud(x[::-1].reshape(self.ndelays, self.num_channels).transpose())
 
     def forward(self, x):
         filter = self.get_filter(x)
