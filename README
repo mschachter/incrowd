@@ -1,0 +1,11 @@
+Prerequisites:
+
+Numpy/Scipy
+http://numpy.scipy.org/
+
+SPAMS
+http://spams-devel.gforge.inria.fr/
+
+CVXOPT
+http://abel.ee.ucla.edu/cvxopt/
+
