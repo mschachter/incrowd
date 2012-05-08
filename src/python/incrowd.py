@@ -3,8 +3,16 @@ import numpy as np
 import operator
 import matplotlib.pyplot as plt
 
-from spams import Lasso
-from cvxopt import matrix as cvxopt_matrix, solvers as cvxopt_solvers
+try:
+    from spams import lasso
+except:
+    from spams import Lasso
+
+try:
+    from cvxopt import matrix as cvxopt_matrix, solvers as cvxopt_solvers
+except:
+    print 'Cannot import cvxopt, you won\'t be able to use the quadratic dense solver!'
+
 import time
 
 class SPAMSLassoSolver(object):
