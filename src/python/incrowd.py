@@ -296,10 +296,15 @@ class FullInCrowdModel(InCrowdModel):
 
 class ConvolutionalInCrowdModel(InCrowdModel):
 
-    def __init__(self, input, target, ndelays, bias=0.0, group_index=None):
+    def __init__(self, input, target, ndelays, bias=0.0, group_index=None, lags=None):
         InCrowdModel.__init__(self)
+        if lags is not None:
+            ndelays = len(lags)
         self.ndelays = ndelays
-        self.time_lags = np.arange(0, self.ndelays, 1, dtype='int')
+        if lags is None:
+            self.time_lags = np.arange(0, self.ndelays, 1, dtype='int')
+        else:
+            self.time_lags = lags
         self.input = input
         self.target_val = target
         self.num_channels = self.input.shape[1]
