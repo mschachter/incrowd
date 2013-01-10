@@ -377,14 +377,18 @@ def fast_conv(input, filter, time_lags, bias=0.0):
     nsamps = input_T.shape[0]
 
     a = np.zeros( [nsamps, 1] )
-    for ti in time_lags:
+    for k,ti in enumerate(time_lags):
         #print 'ti=%d' % ti
         #print 'input_T.shape=',input_T.shape
         #print 'filter[:, ti].shape=',filter[:, ti].shape
-        at = input_T * filter[:, ti].reshape(filter.shape[0], 1)
-        if ti > 0:
-            at = at[:-ti]
+        at = input_T * filter[:, k].reshape(filter.shape[0], 1)
+        if ti >= 0:
+            if ti > 0:
+                at = at[:-ti]
             #print 'at.shape=',at.shape
-        a[ti:] += at
+            a[ti:] += at
+        else:
+            offset = ti % nsamps
+            a[:offset] += at[-ti:]
 
     return a.squeeze() + bias
