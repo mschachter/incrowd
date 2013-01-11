@@ -296,7 +296,7 @@ class FullInCrowdModel(InCrowdModel):
 
 class ConvolutionalInCrowdModel(InCrowdModel):
 
-    def __init__(self, input, target, ndelays, bias=0.0, group_index=None, lags=None):
+    def __init__(self, input, target, ndelays=None, bias=0.0, group_index=None, lags=None):
         InCrowdModel.__init__(self)
         if lags is not None:
             ndelays = len(lags)
@@ -317,7 +317,7 @@ class ConvolutionalInCrowdModel(InCrowdModel):
 
     def get_filter(self, x):
         """ Returns a reshaped filter based on the given vector of parameter values """
-        return np.flipud(x[::-1].reshape(self.ndelays, self.num_channels).transpose())
+        return x.reshape(self.num_channels, self.ndelays)
 
     def forward(self, x):
         filter = self.get_filter(x)
@@ -344,6 +344,36 @@ class ConvolutionalInCrowdModel(InCrowdModel):
 
     def submatrix(self, indices):
         A = np.zeros([self.input.shape[0], len(indices)])
+        d = len(self.time_lags)
+        m = self.num_channels
+        all_indices = np.arange(d*m)
+
+        #compute the channel corresponding to each parameter in the reshaped (flattened) filter
+        channel_indices = np.floor(all_indices / float(d)).astype('int')
+
+        #compute the lag index corresponding to each parameter in the reshaped (flattened) filter
+        lag_indices = all_indices % d
+        #print 'lag_indices=',lag_indices
+
+        for k,i in enumerate(indices):
+            #get lag and channel corresponding to this index
+            lag_index = lag_indices[i]
+            #print 'k=%d, i=%d, lag_index=%d' % (k, i, lag_index)
+            lag = self.time_lags[lag_index]
+            channel_to_get = channel_indices[i]
+
+            if lag == 0:
+                A[:, k] = self.input[:, channel_to_get]
+            else:
+                #shift time series for this channel up or down depending on lag
+                if lag > 0:
+                    A[lag:, k] = self.input[:-lag, channel_to_get]
+                else:
+                    A[:lag, k] = self.input[-lag:, channel_to_get] #note that lag is negative
+        return A
+
+    def submatrix_causal(self, indices):
+        A = np.zeros([self.input.shape[0], len(indices)])
         for k,i in enumerate(indices):
             #get channel are we're looking for
             channel_to_get = i % self.num_channels
@@ -354,7 +384,6 @@ class ConvolutionalInCrowdModel(InCrowdModel):
             else:
                 A[downshift:, k] = self.input[:-downshift, channel_to_get]
         return A
-
 
     def target(self):
         return self.target_val
@@ -380,17 +409,19 @@ def fast_conv(input, filter, time_lags, bias=0.0):
 
     input_T = np.matrix(input)
     nsamps = input_T.shape[0]
+    #print 'input_T.shape=',input_T.shape
+    #print 'time_lags.shape=',time_lags.shape
+    #print 'filter.shape=',filter.shape
 
     a = np.zeros( [nsamps, 1] )
     for k,ti in enumerate(time_lags):
-        #print 'ti=%d' % ti
-        #print 'input_T.shape=',input_T.shape
-        #print 'filter[:, ti].shape=',filter[:, ti].shape
+        #print '\tti=%d' % ti
+        #print '\tfilter[:, ti].shape=',filter[:, ti].shape
         at = input_T * filter[:, k].reshape(filter.shape[0], 1)
         if ti >= 0:
             if ti > 0:
                 at = at[:-ti]
-            #print 'at.shape=',at.shape
+            #print '\tat.shape=',at.shape
             a[ti:] += at
         else:
             offset = ti % nsamps
