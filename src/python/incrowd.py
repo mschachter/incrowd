@@ -188,10 +188,14 @@ class InCrowd(object):
         self.active_set = new_active_set
 
         #check for convergence
-        if self.num_iter > 0 and len(self.active_set) == len(self.last_active_set):
-            if len(np.setdiff1d(self.active_set, self.last_active_set)) == 0:
-                print 'Active set has not changed, converging!'
-                self.converged = True
+        if self.max_additions_fraction == 0.0:
+            print 'Threshold is 1.0, converging.'
+            self.converged = True
+        else:
+            if self.num_iter > 0 and len(self.active_set) == len(self.last_active_set):
+                if len(np.setdiff1d(self.active_set, self.last_active_set)) == 0:
+                    print 'Active set has not changed, converging!'
+                    self.converged = True
 
         self.num_iter += 1
         self.last_active_set = copy.copy(self.active_set)
